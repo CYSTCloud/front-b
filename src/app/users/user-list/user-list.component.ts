@@ -64,16 +64,26 @@ export class UserListComponent implements OnInit, AfterViewInit {
   }
 
   loadUsers(): void {
+    console.log('Chargement des utilisateurs...');
     this.isLoading = true;
     this.userService.getUsers().subscribe({
       next: (users) => {
+        console.log('Utilisateurs chargés:', users);
         this.dataSource.data = users;
         this.isLoading = false;
+        
+        // Rafraîchir le tableau si nous utilisons MatTableDataSource
+        if (this.dataSource.paginator) {
+          this.dataSource.paginator.firstPage();
+        }
+        if (this.dataSource.sort) {
+          this.dataSource.sort.sortChange.emit();
+        }
       },
       error: (err) => {
-        this.error = 'Erreur lors du chargement des utilisateurs';
+        console.error('Erreur lors du chargement des utilisateurs:', err);
+        this.error = `Erreur lors du chargement des utilisateurs: ${err.message || 'Erreur inconnue'}`;
         this.isLoading = false;
-        console.error(err);
       }
     });
   }
@@ -96,6 +106,7 @@ export class UserListComponent implements OnInit, AfterViewInit {
   }
 
   deleteUser(id: number): void {
+    console.log('Demande de suppression de l\'utilisateur:', id);
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '350px',
       data: { title: 'Confirmation', message: 'Êtes-vous sûr de vouloir supprimer cet utilisateur ?' }
@@ -103,16 +114,21 @@ export class UserListComponent implements OnInit, AfterViewInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
+        console.log('Confirmation de suppression pour l\'utilisateur:', id);
         this.userService.deleteUser(id).subscribe({
           next: () => {
-            this.loadUsers();
+            console.log('Utilisateur supprimé avec succès:', id);
             this.snackBar.open('Utilisateur supprimé avec succès', 'Fermer', { duration: 3000 });
+            // Attendre un peu avant de recharger pour s'assurer que le backend a bien traité la requête
+            setTimeout(() => this.loadUsers(), 300);
           },
           error: (err) => {
-            this.snackBar.open('Erreur lors de la suppression', 'Fermer', { duration: 3000 });
-            console.error(err);
+            console.error('Erreur lors de la suppression de l\'utilisateur:', id, err);
+            this.snackBar.open(`Erreur lors de la suppression: ${err.message || 'Erreur inconnue'}`, 'Fermer', { duration: 3000 });
           }
         });
+      } else {
+        console.log('Suppression annulée par l\'utilisateur');
       }
     });
   }

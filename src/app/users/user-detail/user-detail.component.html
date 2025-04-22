@@ -1,28 +1,39 @@
 <h2>Détails utilisateur</h2>
-<button mat-button (click)="goBack()">Retour</button>
+<button (click)="goBack()">Retour</button>
 
-<div *ngIf="isLoading">
-  <mat-spinner diameter="40"></mat-spinner>
-</div>
+<div *ngIf="isLoading">Chargement...</div>
 
-<div *ngIf="error" class="error-message">
+<div *ngIf="error">
   <p>{{ error }}</p>
-  <button mat-button (click)="goBack()">Retour à la liste</button>
+  <button (click)="goBack()">Retour à la liste</button>
 </div>
 
-<mat-card *ngIf="user && !isLoading && !error">
-  <mat-card-header>
-    <mat-card-title>{{ user.firstName }} {{ user.lastName }}</mat-card-title>
-    <mat-card-subtitle>{{ user.username }}</mat-card-subtitle>
-  </mat-card-header>
+<div *ngIf="user && !isLoading && !error">
+  <table border="1">
+    <tr>
+      <td><b>ID:</b></td>
+      <td>{{ user.id }}</td>
+    </tr>
+    <tr>
+      <td><b>Nom d'utilisateur:</b></td>
+      <td>{{ user.username }}</td>
+    </tr>
+    <tr>
+      <td><b>Prénom:</b></td>
+      <td>{{ user.firstName }}</td>
+    </tr>
+    <tr>
+      <td><b>Nom:</b></td>
+      <td>{{ user.lastName }}</td>
+    </tr>
+    <tr>
+      <td><b>Email:</b></td>
+      <td>{{ user.email }}</td>
+    </tr>
+  </table>
   
-  <mat-card-content>
-    <p><strong>ID:</strong> {{ user.id }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-  </mat-card-content>
-  
-  <mat-card-actions>
-    <a mat-button [routerLink]="['/users/edit', user.id]">Modifier</a>
-    <button mat-button color="warn" (click)="deleteUser()">Supprimer</button>
-  </mat-card-actions>
-</mat-card>
+  <div style="margin-top: 10px;">
+    <a [routerLink]="['/users/edit', user.id]">Modifier</a> |
+    <button (click)="deleteUser()">Supprimer</button>
+  </div>
+</div>

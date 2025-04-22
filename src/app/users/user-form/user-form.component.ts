@@ -33,10 +33,13 @@ import { MatIconModule } from '@angular/material/icon';
 export class UserFormComponent implements OnInit {
   userForm!: FormGroup;
   isLoading = false;
+  isSubmitting = false;
   isEditMode = false;
   userId: number | null = null;
   formTitle = 'Nouvel utilisateur';
   submitButtonText = 'Créer';
+  error: string | null = null;
+  user: User | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -47,46 +50,56 @@ export class UserFormComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.initForm();
-    
-    // Vérifier si nous sommes en mode édition
-    this.route.paramMap.subscribe(params => {
-      const id = params.get('id');
-      if (id) {
-        this.userId = +id;
-        this.isEditMode = true;
-        this.formTitle = 'Modifier l\'utilisateur';
-        this.submitButtonText = 'Mettre à jour';
-        this.loadUser(this.userId);
-      }
-    });
-  }
-
-  initForm(): void {
+    // Initialiser le formulaire
     this.userForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]]
     });
+    
+    // Vérifier si nous sommes en mode édition
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.isEditMode = true;
+      this.userId = +id;
+      this.formTitle = 'Modifier l\'utilisateur';
+      this.submitButtonText = 'Mettre à jour';
+      this.loadUser(this.userId);
+    }
+    
+    console.log('Formulaire initialisé, mode édition:', this.isEditMode);
   }
 
   loadUser(id: number): void {
     this.isLoading = true;
+    console.log('Chargement de l\'utilisateur pour édition, ID:', id);
+    
     this.userService.getUserById(id).subscribe({
       next: (user) => {
+        console.log('Utilisateur chargé pour édition:', user);
+        this.user = user;
+        
+        // Vérifier que les données sont bien présentes
+        if (!user.firstName || !user.lastName) {
+          console.warn('Attention: firstName ou lastName manquant dans les données de l\'utilisateur');
+        }
+        
         this.userForm.patchValue({
           username: user.username,
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email
         });
+        
+        console.log('Formulaire mis à jour avec les valeurs:', this.userForm.value);
         this.isLoading = false;
       },
       error: (err) => {
+        console.error('Erreur lors du chargement de l\'utilisateur:', err);
+        this.error = `Erreur lors du chargement de l'utilisateur: ${err.message || 'Erreur inconnue'}`;
         this.snackBar.open('Erreur lors du chargement de l\'utilisateur', 'Fermer', { duration: 3000 });
         this.isLoading = false;
-        console.error(err);
         this.router.navigate(['/users']);
       }
     });
@@ -94,43 +107,61 @@ export class UserFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.userForm.invalid) {
+      // Marquer tous les champs comme touchés pour afficher les erreurs
+      Object.keys(this.userForm.controls).forEach(key => {
+        const control = this.userForm.get(key);
+        control?.markAsTouched();
+      });
+      console.warn('Formulaire invalide, soumission annulée');
       return;
     }
 
-    this.isLoading = true;
+    this.isSubmitting = true;
     const userData: User = this.userForm.value;
+    console.log('Données du formulaire à soumettre:', userData);
 
     if (this.isEditMode && this.userId) {
       // Mise à jour d'un utilisateur existant
+      console.log('Mode édition: mise à jour de l\'utilisateur', this.userId);
       this.userService.updateUser(this.userId, userData).subscribe({
-        next: () => {
+        next: (updatedUser) => {
+          console.log('Utilisateur mis à jour avec succès:', updatedUser);
           this.snackBar.open('Utilisateur mis à jour avec succès', 'Fermer', { duration: 3000 });
-          this.router.navigate(['/users']);
+          this.isSubmitting = false;
+          // Utiliser window.location.href au lieu de router.navigate pour contourner les problèmes de navigation
+          window.location.href = '/users';
         },
         error: (err) => {
-          this.snackBar.open('Erreur lors de la mise à jour', 'Fermer', { duration: 3000 });
-          this.isLoading = false;
-          console.error(err);
+          console.error('Erreur lors de la mise à jour de l\'utilisateur:', err);
+          this.error = `Erreur lors de la mise à jour: ${err.message || 'Erreur inconnue'}`;
+          this.snackBar.open(this.error, 'Fermer', { duration: 3000 });
+          this.isSubmitting = false;
         }
       });
     } else {
       // Création d'un nouvel utilisateur
+      console.log('Mode création: nouvel utilisateur');
       this.userService.createUser(userData).subscribe({
-        next: () => {
+        next: (createdUser) => {
+          console.log('Nouvel utilisateur créé avec succès:', createdUser);
           this.snackBar.open('Utilisateur créé avec succès', 'Fermer', { duration: 3000 });
-          this.router.navigate(['/users']);
+          this.isSubmitting = false;
+          // Utiliser window.location.href au lieu de router.navigate pour contourner les problèmes de navigation
+          setTimeout(() => window.location.href = '/users', 300);
         },
         error: (err) => {
-          this.snackBar.open('Erreur lors de la création', 'Fermer', { duration: 3000 });
-          this.isLoading = false;
-          console.error(err);
+          console.error('Erreur lors de la création de l\'utilisateur:', err);
+          this.error = `Erreur lors de la création: ${err.message || 'Erreur inconnue'}`;
+          this.snackBar.open(this.error, 'Fermer', { duration: 3000 });
+          this.isSubmitting = false;
         }
       });
     }
   }
 
   cancel(): void {
-    this.router.navigate(['/users']);
+    // Utiliser window.location.href au lieu de router.navigate pour contourner les problèmes de navigation
+    window.location.href = '/users';
   }
 
   // Getters pour accéder facilement aux contrôles du formulaire dans le template
