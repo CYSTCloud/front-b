@@ -1,1 +1,28 @@
-<p>user-detail works!</p>
+<h2>Détails utilisateur</h2>
+<button mat-button (click)="goBack()">Retour</button>
+
+<div *ngIf="isLoading">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<div *ngIf="error" class="error-message">
+  <p>{{ error }}</p>
+  <button mat-button (click)="goBack()">Retour à la liste</button>
+</div>
+
+<mat-card *ngIf="user && !isLoading && !error">
+  <mat-card-header>
+    <mat-card-title>{{ user.firstName }} {{ user.lastName }}</mat-card-title>
+    <mat-card-subtitle>{{ user.username }}</mat-card-subtitle>
+  </mat-card-header>
+  
+  <mat-card-content>
+    <p><strong>ID:</strong> {{ user.id }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+  </mat-card-content>
+  
+  <mat-card-actions>
+    <a mat-button [routerLink]="['/users/edit', user.id]">Modifier</a>
+    <button mat-button color="warn" (click)="deleteUser()">Supprimer</button>
+  </mat-card-actions>
+</mat-card>

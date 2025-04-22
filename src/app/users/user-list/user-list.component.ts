@@ -49,9 +49,9 @@ export class UserListComponent implements OnInit, AfterViewInit {
 
   constructor(
     private userService: UserService,
+    private router: Router,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar,
-    private router: Router
+    private snackBar: MatSnackBar
   ) { }
 
   ngOnInit(): void {

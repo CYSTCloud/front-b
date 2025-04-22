@@ -1,1 +1,39 @@
-<p>user-form works!</p>
+<h2>{{ isEditMode ? 'Modifier' : 'Créer' }} utilisateur</h2>
+
+<div *ngIf="isLoading">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<form [formGroup]="userForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+  <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 10px;">
+    <mat-label>Nom d'utilisateur</mat-label>
+    <input matInput formControlName="username">
+    <mat-error *ngIf="userForm.get('username')?.hasError('required')">Champ requis</mat-error>
+  </mat-form-field>
+  
+  <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 10px;">
+    <mat-label>Prénom</mat-label>
+    <input matInput formControlName="firstName">
+    <mat-error *ngIf="userForm.get('firstName')?.hasError('required')">Champ requis</mat-error>
+  </mat-form-field>
+  
+  <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 10px;">
+    <mat-label>Nom</mat-label>
+    <input matInput formControlName="lastName">
+    <mat-error *ngIf="userForm.get('lastName')?.hasError('required')">Champ requis</mat-error>
+  </mat-form-field>
+  
+  <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 10px;">
+    <mat-label>Email</mat-label>
+    <input matInput formControlName="email" type="email">
+    <mat-error *ngIf="userForm.get('email')?.hasError('required')">Champ requis</mat-error>
+    <mat-error *ngIf="userForm.get('email')?.hasError('email')">Email invalide</mat-error>
+  </mat-form-field>
+  
+  <div style="margin-top: 15px;">
+    <button mat-button type="button" (click)="cancel()">Annuler</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="userForm.invalid">
+      {{ isEditMode ? 'Mettre à jour' : 'Créer' }}
+    </button>
+  </div>
+</form>
